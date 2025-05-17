@@ -30,12 +30,31 @@
       quickswap: { name: "QuickSwap", address: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff" },
       sushiswap: { name: "SushiSwap", address: "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506" }
     };
-
-    const tokens = [
+    const tokenList = [
       { symbol: "SHIB", address: "0x6f8A06447ff6fcf75d803135a7d3e5b886b3b4bc", decimals: 18 },
-      { symbol: "AAVE", address: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B", decimals: 18 }
-    ];
-
+      { symbol: "AAVE", address: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B", decimals: 18 },
+      { symbol: "AAVE", address: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B", decimals: 18 },  
+  { symbol: "APE", address: "0xb7B31a6Bc18e48888545Ce79e83E06003be70930", decimals: 18 },  
+  { symbol: "BUSD", address: "0x9c9e5fD8bbc25984B178FdCE6117Defa39d2db39", decimals: 18 },  
+  { symbol: "CRV", address: "0x172370d5cd63279efa6d502dab29171933a610af", decimals: 18 },  
+  { symbol: "DAI", address: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063", decimals: 18 },  
+  { symbol: "DIMO", address: "0xe261d618a959afffd53168cd07d12e37b26761db", decimals: 18 },  
+  { symbol: "FRAX", address: "0x45c32fa6df82ead1e2ef74d17b76547eddfaff89", decimals: 18 },  
+  { symbol: "GFC", address: "0x071ac29d569a47ebffb9e57517f855cb577dcc4c", decimals: 18 },  
+  { symbol: "LINK", address: "0x53E0bca35ec356bd5dddfebbd1fc0fd03fabad39", decimals: 18 },  
+  { symbol: "SAND", address: "0xBBba073C31bF03b8ACf7c28EF0738DeCF3695683", decimals: 18 },  
+  { symbol: "SHIB", address: "0x6f8A06447ff6fcf75d803135a7d3e5b886b3b4bc", decimals: 18 },  
+  { symbol: "SRM", address: "0x6bf2eb299e51fc5df30dec81d9445dde70e3f185", decimals: 18 },  
+  { symbol: "TUSD", address: "0x2e1ad108ff1d8c782fcbbb89aad783ac49586756", decimals: 18 },  
+  { symbol: "UNI", address: "0xb33EaAd8d922B1083446DC23f610c2567fB5180f", decimals: 18 },  
+  { symbol: "USDC", address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6 },  
+  { symbol: "USDT", address: "0xc2132D05D31c914a87C6611C10748AaB04B58e8F", decimals: 6 },  
+  { symbol: "VCNT", address: "0x8a16d4bf8a0a716017e8d2262c4ac32927797a2f", decimals: 18 },  
+  { symbol: "WBTC", address: "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6", decimals: 8 },  
+  { symbol: "WETH", address: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", decimals: 18 },  
+  { symbol: "XSGD", address: "0xdc3326e71d45186f113a2f448984ca0e8d201995", decimals: 6 },  
+  { symbol: "ZED", address: "0x5ec03c1f7fa7ff05ec476d19e34a22eddb48acdc", decimals: 18 }  
+];
     const USDC = { symbol: "USDC", address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6 };
 
     let provider, signer, contract, userAddress, intervalId;
