@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Polygon Arbitrage Bot</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+  <style>
+    body { background: #002626; color: #fff; font-family: Arial; padding: 20px; }
+    button, input { padding: 10px; margin: 10px 0; border-radius: 8px; }
+    #log { background: #011e1e; padding: 10px; max-height: 300px; overflow-y: scroll; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h2>Polygon Arbitrage Interface</h2>
+  <button id="connect">Connect Wallet</button>
+  <p>Wallet: <span id="address">-</span></p>
+  <label>USDC Amount: <input id="amount" type="number" value="10" step="0.01"></label>
+  <button id="start">Start Arbitrage</button>
+  <button id="stop">Stop</button>
+
+  <div id="log"></div>
+
+  <script>
+    const CONTRACT_ADDRESS = "0xe0A6d56Fbc4a4E4E94E0D2B9D52adc323Dfa55Ee";
+    const CONTRACT_ABI = [{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bool","name":"buyOnQuickSwap","type":"bool"},{"internalType":"bool","name":"sellOnQuickSwap","type":"bool"}],"name":"executeArbitrage","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+
+    const ROUTER_ABI = [{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"}];
+
+    const routers = {
+      quickswap: { name: "QuickSwap", address: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff" },
+      sushiswap: { name: "SushiSwap", address: "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506" }
+    };
+
+    const tokens = [
+      { symbol: "SHIB", address: "0x6f8A06447ff6fcf75d803135a7d3e5b886b3b4bc", decimals: 18 },
+      { symbol: "AAVE", address: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B", decimals: 18 }
+    ];
+
+    const USDC = { symbol: "USDC", address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", decimals: 6 };
+
+    let provider, signer, contract, userAddress, intervalId;
+
+    const log = (msg) => {
+      const el = document.getElementById("log");
+      el.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+      el.scrollTop = el.scrollHeight;
+    };
+
+    async function connectWallet() {
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      userAddress = await signer.getAddress();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      document.getElementById("address").textContent = userAddress;
+      log("Connected: " + userAddress);
+    }
+
+    async function getAmountOut(routerAddr, amountIn, path) {
+      const router = new ethers.Contract(routerAddr, ROUTER_ABI, provider);
+      try {
+        const amounts = await router.getAmountsOut(amountIn, path);
+        return amounts[amounts.length - 1];
+      } catch (e) {
+        return ethers.BigNumber.from("0");
+      }
+    }
+
+    async function checkArbitrage() {
+      const usdcAmount = parseFloat(document.getElementById("amount").value);
+      const amountIn = ethers.parseUnits(usdcAmount.toString(), USDC.decimals);
+
+      for (let token of tokens) {
+        for (let buyDexKey in routers) {
+          for (let sellDexKey in routers) {
+            if (buyDexKey === sellDexKey) continue;
+
+            const buyDex = routers[buyDexKey];
+            const sellDex = routers[sellDexKey];
+
+            // Buy USDC → token
+            const buyOut = await getAmountOut(buyDex.address, amountIn, [USDC.address, token.address]);
+            if (buyOut.isZero()) continue;
+
+            // Sell token → USDC
+            const sellOut = await getAmountOut(sellDex.address, buyOut, [token.address, USDC.address]);
+            if (sellOut.isZero()) continue;
+
+            const profit = sellOut - amountIn;
+
+            if (profit > 0) {
+              log(`Profitable! ${token.symbol} via ${buyDex.name} → ${sellDex.name}: Profit = ${(profit / 1e6).toFixed(4)} USDC`);
+
+              // Execute arbitrage
+              try {
+                await connectWallet(); // ensure connected
+                const tx = await contract.executeArbitrage(token.address, amountIn, buyDex.name === "QuickSwap", sellDex.name === "QuickSwap");
+                log("Tx sent: " + tx.hash);
+                const receipt = await tx.wait();
+                log("Tx confirmed in block " + receipt.blockNumber);
+              } catch (err) {
+                log("TX Error: " + err.message);
+              }
+
+              return;
+            } else {
+              log(`No profit on ${token.symbol} via ${buyDex.name} → ${sellDex.name}`);
+            }
+          }
+        }
+      }
+    }
+
+    document.getElementById("connect").onclick = connectWallet;
+
+    document.getElementById("start").onclick = () => {
+      if (!intervalId) {
+        intervalId = setInterval(checkArbitrage, 10000); // check every 10s
+        log("Started arbitrage loop.");
+      }
+    };
+
+    document.getElementById("stop").onclick = () => {
+      clearInterval(intervalId);
+      intervalId = null;
+      log("Stopped arbitrage loop.");
+    };
+  </script>
+</body>
+</html>
